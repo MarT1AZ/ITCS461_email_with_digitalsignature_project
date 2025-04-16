@@ -14,7 +14,7 @@ public class user {
     public user(String _name,String _email,KeyPairGenerator KPG) throws NoSuchFieldException, InvalidAlgorithmParameterException{
         this.name= _name;
         this.EmailAddress = _email;
-        KPG.initialize(new ECGenParameterSpec("secp256r1"), new SecureRandom());
+        KPG.initialize(3072);
         this.keyPair = KPG.generateKeyPair();
     }
 

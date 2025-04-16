@@ -31,5 +31,11 @@ public class email{
         return stringEmail;
     }
 
+    public byte[] toByte(){
+        return this.toString().getBytes();
+    }
+
+    
+
 
 }

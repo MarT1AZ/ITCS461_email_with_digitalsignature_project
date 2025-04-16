@@ -1,8 +1,10 @@
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+
 
 public class emailSignature{
 
@@ -12,5 +14,11 @@ public class emailSignature{
         _signature.update(byteMessage);
         return _signature.sign();
     }
+
+    // public static byte[] validateEmailSignature(PublicKey PUK, byte[] signature){
+    //     Signature _signature = Signature.getInstance("SHA256withECDSA");
+    //     _signature.initVerify(PUK);
+    // }
+
 
 }
