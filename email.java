@@ -23,8 +23,8 @@ public class email{
 
     public String toString(){
         String stringEmail = "";
-        stringEmail += this.SenderAddress + "\n";
-        stringEmail += this.ReceiverAddress + "\n";
+        stringEmail += "sender : " + this.SenderAddress + "\n";
+        stringEmail += "to :" + this.ReceiverAddress + "\n";
         for(int lidx = 0;lidx < this.content.size();lidx++){
             stringEmail = stringEmail + this.content.get(lidx) + "\n";
         }

@@ -18,12 +18,31 @@ public class main_ {
         System.out.flush(); 
     }
 
-    public static void hexadecimalPrint(byte[] bytes){
-        System.out.print("hexadecimal view : ");
+    // public static void hexadecimalPrint(byte[] bytes,boolean useLimit,int limit){
+    //     int counter = 0;
+    //     for(int bidx = 0;bidx < bytes.length;bidx++){
+    //         if(useLimit && counter >= limit){
+    //             break;
+    //         }
+    //         counter++;
+    //         System.out.print(String.format("%02X", bytes[bidx]));
+    //     }
+    //     if(useLimit){
+    //         System.out.print(".....");
+    //     }
+    // }
+
+    public static String getHexadecimalString(byte[] bytes,boolean useLimit,int limit){
+        String hex = "";
+        int counter = 0;
         for(int bidx = 0;bidx < bytes.length;bidx++){
-            System.out.print(String.format("%02X", bytes[bidx]));
+            if(useLimit && counter >= limit){
+                break;
+            }
+            hex = hex + String.format("%02X", bytes[bidx]);
+            counter++;
         }
-        System.out.print("\n");
+        return hex;
     } 
 
     public static boolean verify(byte[] hash1,byte[] hash2){
@@ -34,6 +53,24 @@ public class main_ {
         }
         return true;
     }
+
+    public static byte[] attackerResendByte(String[] alteredMessageLines){
+        String message = "";
+        for(int sidx = 0; sidx < alteredMessageLines.length;sidx++){
+            message = message + alteredMessageLines + "\n";
+        }
+        return message.getBytes();
+    }
+
+    public static String byteToString(byte[] message){
+        String stringMessage = "";
+        for(int bidx = 0;bidx < message.length;bidx++){
+            stringMessage = stringMessage + (char) message[bidx];
+        }
+        return stringMessage;
+    }
+
+
     public static void main(String[] args) {
         // System.out.print("\033[H\033[2J");  
         // System.out.flush();  
@@ -54,7 +91,9 @@ public class main_ {
 
 
         
-        ///////////////// Recieved
+        ///////////////// Reciever
+        
+        PublicKey selectedKeyForVerification;
         
         Cipher recieverCipherRSA;
         MessageDigest recieverMD;
@@ -62,6 +101,16 @@ public class main_ {
         byte[] receivedByteMessage;
         byte[] decryptedHashValue;
         byte[] hashValueOfReievedMessage;
+
+
+        /////////////////////////// attacker
+        
+        String[] messageLines;
+        
+        
+        
+        
+        /////////////////////////// attacker
 
         // String stringMessageHexadecimal = "";
         // byte[] signedSignature = null;
@@ -84,14 +133,25 @@ public class main_ {
         publicEmailList.add("alice@gmail.com");
         publicEmailList.add("bob@gmail.com");
         publicEmailList.add("jack@gmail.com");
+        user attacker = null;
 
         try{
-            users.add(new user("alice",publicEmailList.get(0),KeyPairGenerator.getInstance("RSA")));
-            users.add(new user("bob",publicEmailList.get(1),KeyPairGenerator.getInstance("RSA")));
-            users.add(new user("jack",publicEmailList.get(2),KeyPairGenerator.getInstance("RSA")));
+            users.add(new user("alice",
+                                    publicEmailList.get(0),
+                                    KeyPairGenerator.getInstance("RSA")));
+            users.add(new user("bob",
+                                    publicEmailList.get(1),
+                                    KeyPairGenerator.getInstance("RSA")));
+            users.add(new user("jack",
+                                    publicEmailList.get(2),
+                                    KeyPairGenerator.getInstance("RSA")));
+            attacker = new user("Attacker", 
+                            "attacker@gmail.com",
+                                    KeyPairGenerator.getInstance("RSA"));
         }catch(Exception e){
             System.out.println(e.getMessage());
         }
+        
         
         ArrayList<PublicKey> PublicKeyList = new ArrayList<PublicKey>();
         for(int uidx = 0;uidx < users.size();uidx++){
@@ -131,6 +191,18 @@ public class main_ {
         
         while(!exit_program){
 
+
+
+
+
+
+
+
+
+
+
+
+
             if(function_mode == FUNCTION.SELECT_FUNCTION){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 System.out.println("current FUNCTION : " + String.valueOf(function_mode));
                 System.out.println("Please select function mode");
@@ -164,7 +236,36 @@ public class main_ {
                 clearScreen();
                 
 
-            }
+            }// end SELECT_FUNCTION
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             
             if(function_mode == FUNCTION.SELECT_SENDER){////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +304,34 @@ public class main_ {
                 function_mode = FUNCTION.SELECT_FUNCTION;
                 clearScreen();
 
-            }
+            } // end SELECT_SENDER
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             else if(function_mode == FUNCTION.SELECT_RECIEVER){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
                 
@@ -243,7 +371,30 @@ public class main_ {
                 // select user
                 function_mode = FUNCTION.SELECT_FUNCTION;
                 clearScreen();
-            }
+            } //end SELECT_RECIEVER
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             else if(function_mode == FUNCTION.COMPOSE_EMAIL){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 System.out.println("current FUNTION : " + String.valueOf(function_mode));
                 System.out.println("Start compose email by typing each line");
@@ -268,7 +419,37 @@ public class main_ {
 
                 function_mode = FUNCTION.VIEW_EMAIL;
                 clearScreen();
-            }
+            } // end COMPOSE EMAIL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             else if(function_mode == FUNCTION.VIEW_EMAIL){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 System.out.println("current FUNCTION : " + String.valueOf(function_mode));
                 System.out.print("\n");
@@ -296,7 +477,30 @@ public class main_ {
                 function_mode = FUNCTION.SELECT_FUNCTION;
                 clearScreen();
 
-            }
+            } /// end VIEW_EMAIL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             else if(function_mode == FUNCTION.SIMULATE_SENDING){ ////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
                 
@@ -310,87 +514,132 @@ public class main_ {
                     hashValue = senderMD.digest(sentByteMessage);
                     
                     senderCipherRSA.init(Cipher.ENCRYPT_MODE, Sender.getPrivateKey());
-                    sentEncryptedHash = senderCipherRSA.doFinal(draftEmail.toByte());
+                    sentEncryptedHash = senderCipherRSA.doFinal(hashValue);
 
-                    System.out.println("email content in hexadecimal\n");
-                    hexadecimalPrint(sentByteMessage);
-                    System.out.println("\nHash of the email in hexadecimal\n");
-                    hexadecimalPrint(hashValue);
-                    System.out.println("\nEncrypted hash in hexadecimal using RSA\n");
-                    hexadecimalPrint(sentEncryptedHash);
+                    System.out.printf("email content in hexadecimal : %s .....\n", getHexadecimalString(sentByteMessage,true,10));
+                    System.out.printf("the private key of the sender : %s .....\n", getHexadecimalString(Sender.getPublicKey().getEncoded(),true,15));
+                    System.out.printf("Hash of the email in hexadecimal : %s .....\n", getHexadecimalString(hashValue,true,10));
+                    System.out.printf("Encrypted hash in hexadecimal using RSA %s .....\n", getHexadecimalString(sentEncryptedHash,true,10));
 
                     //////////////////// SEND MESSAGE PRE ATTACK
                     System.out.println("\n\nSENDING MESSAGE\n\n");
+
+                    
                     //////////////////// SEND MESSAGE PRE ATTACK
                     
 
+                    //////////////////// ATTACKING
+
+
+                    System.out.println("\n\nATTACKING\n\n");
+
+                    System.out.println("Attacker decide to change the sender to the attacker's address");
+                    System.out.println(byteToString(sentByteMessage));
+                    messageLines = byteToString(sentByteMessage).split("\n");
+                    messageLines[0] = messageLines[0].split(":")[0] + ": " + attacker.EmailAddress;
+                    
+                    System.out.println("INTO\n");
+                    for(int lidx = 0;lidx < messageLines.length;lidx++){
+                        System.out.println(messageLines[lidx]);
+                    }
+
+                    sentByteMessage = attackerResendByte(messageLines);
+
+                    //////////////////// ATTACKING
+                    
+
+                    /////////// recieving end
+                    
+                 
+                    System.out.println("\n\nRECIEVING\n\n");
+
+                    
                     /////////// recieving end
                     recievedEncryptedHash = sentEncryptedHash;
                     receivedByteMessage = sentByteMessage;
 
                     recieverMD = MessageDigest.getInstance("SHA256");
-                    recieverCipherRSA = Cipher.getInstance("RSA");
-                    recieverCipherRSA.init(Cipher.DECRYPT_MODE, Sender.getPublicKey());
-
-                    hashValueOfReievedMessage = recieverMD.digest(receivedByteMessage);
-                    decryptedHashValue = recieverCipherRSA.doFinal(recievedEncryptedHash);
-
-                    System.out.println("recieved email content in hexadecimal\n");
-                    hexadecimalPrint(receivedByteMessage);
-                    System.out.println("\nHash of the recieved email in hexadecimal\n");
-                    hexadecimalPrint(hashValueOfReievedMessage);
-                    System.out.println("\nDecrypted recieved hash in hexadecimal using RSA\n");
-                    hexadecimalPrint(decryptedHashValue);
-                    System.out.printf("\nverfication of authencity of the recieved email %b",verify(decryptedHashValue,
-                                                                                                        hashValueOfReievedMessage));
                     
 
+                    hashValueOfReievedMessage = recieverMD.digest(receivedByteMessage);
+                    
+
+                    System.out.printf("recieved email content in hexadecimal : %s .....\n",getHexadecimalString(receivedByteMessage,true,10));
+
+                    System.out.printf("recieved encrypted hash in hexadecimal using RSA : %s .....\n",getHexadecimalString(recievedEncryptedHash,true,15));
+
+                    //////////////////// VERIFICATION
+                    
+
+                    System.out.println("\n\nVERIFYING\n\n");
+                    
+                    System.out.println("Please select a public key to verify the authencity of the recieved Email message");
+                    System.out.println("Please select a public key by selecting user ID\n");
+                    for(int uidx = 0; uidx < users.size();uidx++){
+                        System.out.printf("type %s to use the public key of user : %s email-address : %s  \n",
+                                            uidx + 1,
+                                            users.get(uidx).name,
+                                            users.get(uidx).EmailAddress);
+                    }
+
+                    selected_userID = -1;
+                    while(selected_userID == -1){
+                        try{
+                            System.out.print("selecting with user ID : ");
+                            selected_userID = Integer.parseInt(sc.nextLine());
+                        }catch(Exception e){
+                            System.out.println("given user ID is not an integer please try again");
+                            continue;
+                        }
+                        if(selected_userID <= 0 || selected_userID > users.size()){
+                            System.out.println("given user ID is out of bound, please try again!");
+                            selected_userID = -1;
+                        }
+                    }
+
+                    selected_userID = selected_userID - 1;
+                    selectedKeyForVerification = users.get(selected_userID).getPublicKey();
+
+                    recieverCipherRSA = Cipher.getInstance("RSA");
+                    try{
+                        recieverCipherRSA.init(Cipher.DECRYPT_MODE, selectedKeyForVerification);
+                    }catch(Exception e){
+                        System.out.println(e.getMessage());
+                        System.out.println("Exception from inner Try block=01");
+                        System.out.println("The message must have been altered!!");
+                    }
+                    
+                    try {
+                        decryptedHashValue = recieverCipherRSA.doFinal(recievedEncryptedHash);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                        System.out.println("Exception from inner Try block=02");
+                        System.out.println("The message must have been altered!!");
+                        decryptedHashValue = null;
+                    }
+                    
+                    
+                    
+                    
+                    System.out.printf("\nHash of the recieved email in hexadecimal : %s .....\n",getHexadecimalString(hashValueOfReievedMessage,true,10));
+                    
+                    try {
+                        System.out.printf("\nDecrypted recieved hash in hexadecimal using RSA : %s .....\n",getHexadecimalString(decryptedHashValue,true,10));
+                        System.out.printf("\nverfication of authencity of the recieved email %b",verify(decryptedHashValue,
+                                                                                                            hashValueOfReievedMessage));
+                    } catch (Exception e) {
+                        // TODO: handle exception
+                        System.out.println(e.getMessage());
+                        System.out.println("Exception from inner Try block=03");
+                        System.out.println("The message must have been altered!!");
+                    }
                     
 
                 }catch(Exception e){
                     System.out.println(e.getMessage());
-                }
+                    System.out.println("Exception from outer Try block");
+                } 
 
-                
-                
-
-
-
-                // stringMessage = draftEmail.toString();
-                // byteMessage = stringMessage.getBytes();
-                // for(int bidx = 0;bidx < byteMessage.length;bidx++){
-                //     stringMessageHexadecimal = stringMessageHexadecimal + String.format("%02X", byteMessage[bidx]) ;
-                // }
-                
-                // System.out.println("the content of the email");
-                // System.out.println(stringMessage);
-
-                
-                // System.out.println("the content of the email in hexadecimal\n");
-                // System.out.printf("hexadecimal : %s \n",stringMessageHexadecimal);
-                // try{
-                //     signedSignature = emailSignature.SignEmail(Sender.getPrivateKey(), byteMessage);
-                // }catch(Exception e){
-                //     System.out.println(e.getMessage());
-                // }
-                // if(signedSignature != null){
-                //     stringSignature = "";
-                //     for(int bidx = 0; bidx < signedSignature.length;bidx++){
-                //         stringSignature = stringSignature + String.format("%02X", signedSignature[bidx]) ;
-                //     }
-                //     System.out.println("\nThe signed digital signature of the email");
-                //     System.out.printf("\nSignature : %s \n",stringSignature);
-                // }else{
-                //     System.out.println("sign failed");
-                // }
-
-                ///////////////// sending meesage
-                // ReceivedByteMessage = byteMessage;
-                // ReceivedByteMessage = signedSignature;
-                ///////////////// sending message
-                
-
-                
 
                 System.out.print("\n");
                 System.out.println("Press any keys to return ");
@@ -398,14 +647,39 @@ public class main_ {
                 function_mode = FUNCTION.SELECT_FUNCTION;
                 clearScreen();
             
-            }
+            }// end SIMULATE SENDING
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             if(function_mode == FUNCTION.EXIT){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 
                 System.out.println("current FUNCTION : " + String.valueOf(function_mode));
                 System.out.print("\n");
                 break;
-            }
+            } // end EXIT
+
+
+
+
+
+
+
+
+
+
+
+            
             
 
         }
