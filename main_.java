@@ -48,7 +48,13 @@ public class main_ {
             }else{
                 contentLine2 = "";
             }
-            System.out.printf("Line %-2d : %-50s | Line %-2d: %-50s\n",lidx,contentLine1,lidx,contentLine2);
+            System.out.printf("Line %-2d : %-50s | Line %-2d : %-50s\n",lidx,contentLine1,lidx,contentLine2);
+        }
+    }
+
+    public static void show1email(String[] emailLine){
+        for(int lidx = 0;lidx < emailLine.length;lidx++){
+            System.out.printf("Line %-2d : %-50s \n",lidx,emailLine[lidx]);
         }
     }
 
@@ -74,10 +80,10 @@ public class main_ {
         return true;
     }
 
-    public static byte[] attackerResendByte(String[] alteredMessageLines){
+    public static byte[] attackerResendByte(String[] modifiedMessageLines){
         String message = "";
-        for(int sidx = 0; sidx < alteredMessageLines.length;sidx++){
-            message = message + alteredMessageLines + "\n";
+        for(int sidx = 0; sidx < modifiedMessageLines.length;sidx++){
+            message = message + modifiedMessageLines[sidx] + "\n";
         }
         return message.getBytes();
     }
@@ -108,7 +114,13 @@ public class main_ {
         byte[] sentByteMessage;
         byte[] hashValue;
 
-        //////////////// attack
+
+        //// ongoing message
+        
+        byte[] packetByteMessage;
+        byte[] packetByteEncryptedHash;
+
+        /// 
 
 
         
@@ -127,8 +139,18 @@ public class main_ {
         /////////////////////////// attacker
         
         String[] messageLines;
+        int selectModificationMethodID;
         
-        
+        enum MODIFY_METHOD{
+            CHOOSE_METHOD,
+            CHANGE_SENDER,
+            CHANGE_CONTENT,
+            CHANGE_SIGNATURE,
+            TOTAL_MODIFICATION,
+            PASS_MESSAGE
+        }
+
+        MODIFY_METHOD selected_method;
         
         
         /////////////////////////// attacker
@@ -549,67 +571,136 @@ public class main_ {
                     senderCipherRSA.init(Cipher.ENCRYPT_MODE, Sender.getPrivateKey());
                     sentEncryptedHash = senderCipherRSA.doFinal(hashValue);
 
-                    System.out.printf("email content in hexadecimal : %s .....\n", getHexadecimalString(sentByteMessage,true,10));
-                    System.out.printf("the private key of the sender : %s .....\n", getHexadecimalString(Sender.getPublicKey().getEncoded(),true,15));
-                    System.out.printf("Hash of the email in hexadecimal : %s .....\n", getHexadecimalString(hashValue,true,10));
-                    System.out.printf("Encrypted hash in hexadecimal using RSA %s .....\n", getHexadecimalString(sentEncryptedHash,true,10));
+                    // System.out.printf("email content in hexadecimal : %s .....\n", getHexadecimalString(sentByteMessage,true,10));
+                    // System.out.printf("the private key of the sender : %s .....\n", getHexadecimalString(Sender.getPublicKey().getEncoded(),true,15));
+                    // System.out.printf("Hash of the email in hexadecimal : %s .....\n", getHexadecimalString(hashValue,true,10));
+                    // System.out.printf("Encrypted hash in hexadecimal using RSA %s .....\n", getHexadecimalString(sentEncryptedHash,true,10));
 
                     //////////////////// SEND MESSAGE PRE ATTACK
-                    System.out.println("\n\nSENDING MESSAGE\n\n");
 
-                    
+                    packetByteEncryptedHash = sentEncryptedHash.clone();
+                    packetByteMessage = sentByteMessage.clone();
+
                     //////////////////// SEND MESSAGE PRE ATTACK
                     
 
                     //////////////////// ATTACKING
 
+                    // System.out.printf("       Original Email\n\n");
+                    // show1email(draftEmail.getContentArray());
 
-                    System.out.println("\n\nATTACKING\n\n");
+                    // System.out.printf("\n       Intercepted Email Byte Stream\n");
+                    // System.out.printf("\n   %s\n",getHexadecimalString(packetByteMessage, true,20) + " ....");
 
-                    System.out.println("Attacker decide to change the sender to the attacker's address");
-                    System.out.println(byteToString(sentByteMessage));
-                    messageLines = byteToString(sentByteMessage).split("\n");
-
-                    messageLines[0] = messageLines[0].split(":")[0] + ": " + attacker.EmailAddress;
+                    // System.out.printf("\n       Intercepted Encrypted Hash Byte Stream\n");
+                    // System.out.printf("\n   %s\n\n",getHexadecimalString(packetByteEncryptedHash, true,20) + " ....");
                     
-                    System.out.println("INTO\n");
-                    for(int lidx = 0;lidx < messageLines.length;lidx++){
-                        System.out.println(messageLines[lidx]);
+                    // System.out.println("As an ATTACKER, how would you like to modifiy the message??\n");
+
+                    // System.out.println("please select method by command id");
+                    // for(int midx = 0;midx < MODIFY_METHOD.values().length;midx++){
+                    //     System.out.printf("id : %d command : %s\n",midx,MODIFY_METHOD.values()[midx].toString());
+                    // }
+
+                    selected_method = MODIFY_METHOD.CHOOSE_METHOD;
+
+                    while(selected_method != MODIFY_METHOD.PASS_MESSAGE){
+
+                        System.out.printf("       Original Email\n\n");
+                        show1email(draftEmail.getContentArray());
+
+                        System.out.printf("\n       Intercepted Email Byte Stream\n");
+                        System.out.printf("\n   %s\n",getHexadecimalString(packetByteMessage, true,20) + " ....");
+
+                        System.out.printf("\n       Intercepted Encrypted Hash Byte Stream\n");
+                        System.out.printf("\n   %s\n\n",getHexadecimalString(packetByteEncryptedHash, true,20) + " ....");
+                        
+                        System.out.println("As an ATTACKER, how would you like to modifiy the message??\n");
+
+                        System.out.println("please select method by command id");
+                        for(int midx = 0;midx < MODIFY_METHOD.values().length;midx++){
+                            System.out.printf("id : %d command : %s\n",midx,MODIFY_METHOD.values()[midx].toString());
+                        }
+
+                        selectModificationMethodID = -1;
+                        while(selectModificationMethodID == -1){
+                            try{
+                                System.out.print("selecting method with integer : ");
+                                selectModificationMethodID = Integer.parseInt(sc.nextLine());
+                            }catch(Exception e){
+                                System.out.println("given integer is not an integer please try again");
+                                continue;
+                            }
+                            if(selectModificationMethodID < 0 || selectModificationMethodID > MODIFY_METHOD.values().length){
+                                System.out.println("given integer is out of bound, please try again!");
+                                selectModificationMethodID = -1;
+                            }
+                        }
+
+                        selected_method = MODIFY_METHOD.values()[selectModificationMethodID];
+
+                        switch (selected_method) {
+                            case MODIFY_METHOD.CHANGE_SENDER:
+
+                                messageLines = byteToString(packetByteMessage).split("\n");
+                                messageLines[0] = messageLines[0].split(":")[0] + ": " + attacker.EmailAddress;
+                                packetByteMessage = attackerResendByte(messageLines);
+                                clearScreen();
+                                break;
+
+                            case MODIFY_METHOD.CHANGE_CONTENT:
+                                clearScreen();
+                                break;
+                            case MODIFY_METHOD.CHANGE_SIGNATURE:
+                                clearScreen();
+                                break;
+                            case MODIFY_METHOD.TOTAL_MODIFICATION:
+                                clearScreen();
+                                break;
+                            case MODIFY_METHOD.PASS_MESSAGE:
+                                clearScreen();
+                                break;
+                            default:
+                                clearScreen();
+                                break;
+                        }
+                        
                     }
-
-                    sentByteMessage = attackerResendByte(messageLines);
-
-                    show2emailSideBySide(messageLines, messageLines);
+                    
+                    clearScreen();
+                    
 
                     //////////////////// ATTACKING
                     
+                    
+
 
                     /////////// recieving end
                     
-                 
-                    System.out.println("\n\nRECIEVING\n\n");
 
                     
                     /////////// recieving end
-                    recievedEncryptedHash = sentEncryptedHash;
-                    receivedByteMessage = sentByteMessage;
+                    recievedEncryptedHash = packetByteEncryptedHash.clone();
+                    receivedByteMessage = packetByteMessage.clone();
 
                     recieverMD = MessageDigest.getInstance("SHA256");
                     
-
                     hashValueOfReievedMessage = recieverMD.digest(receivedByteMessage);
+
+                    System.out.printf("       Recieved Email\n\n");
+                    show1email(byteToString(receivedByteMessage).split("\n"));
+
+                    System.out.printf("\n       Recieved Email Byte Stream\n");
+                    System.out.printf("\n   %s\n",getHexadecimalString(receivedByteMessage, true,20) + " ....");
+
+                    System.out.printf("\n       Recieved Encrypted Hash Byte Stream\n");
+                    System.out.printf("\n   %s\n",getHexadecimalString(recievedEncryptedHash, true,20) + " ....");
                     
-
-                    System.out.printf("recieved email content in hexadecimal : %s .....\n",getHexadecimalString(receivedByteMessage,true,10));
-
-                    System.out.printf("recieved encrypted hash in hexadecimal using RSA : %s .....\n",getHexadecimalString(recievedEncryptedHash,true,15));
 
                     //////////////////// VERIFICATION
                     
 
-                    System.out.println("\n\nVERIFYING\n\n");
-                    
-                    System.out.println("Please select a public key to verify the authencity of the recieved Email message");
+                    System.out.println("\nAs the RECIEVER, choose a public key to verify the authencity of the recieved Email message\n");
                     System.out.println("Please select a public key by selecting user ID\n");
                     for(int uidx = 0; uidx < users.size();uidx++){
                         System.out.printf("type %s to use the public key of user : %s email-address : %s  \n",
@@ -617,7 +708,7 @@ public class main_ {
                                             users.get(uidx).name,
                                             users.get(uidx).EmailAddress);
                     }
-
+                    System.out.println("\n");
                     selected_userID = -1;
                     while(selected_userID == -1){
                         try{
@@ -669,6 +760,17 @@ public class main_ {
                         System.out.println("Exception from inner Try block=03");
                         System.out.println("The message must have been altered!!");
                     }
+
+                    System.out.print("\n\n");
+                    // System.out.printf("Line %-2d : %-50s | Line %-2d : %-50s\n");
+                    System.out.printf("       Original Email %-47s Recieved Email\n\n","");
+                    show2emailSideBySide(byteToString(sentByteMessage).split("\n"), byteToString(receivedByteMessage).split("\n"));
+                    System.out.printf("\n       %-50s             %-50s\n","Sent Email Byte Stream","Recieved Email Byte Stream");
+                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(sentByteMessage, true,20) + " ....",getHexadecimalString(receivedByteMessage, true,20) + " ....");
+                    System.out.printf("\n       %-50s             %-50s\n","Sent Hash","Hash of the recieved Email Byte Stream");
+                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(hashValue, true,20) + " ....",getHexadecimalString(hashValueOfReievedMessage, true,20) + " ....");
+                    System.out.printf("\n       %-50s             %-50s\n","Sent Encrypted Hash","Recieved Encrypted Hash");
+                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(sentEncryptedHash, true,20) + " ....",getHexadecimalString(recievedEncryptedHash, true,20) + " ....");
                     
 
                 }catch(Exception e){

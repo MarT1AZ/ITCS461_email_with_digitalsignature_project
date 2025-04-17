@@ -31,6 +31,10 @@ public class email{
         return stringEmail;
     }
 
+    public String[] getContentArray(){
+        return this.toString().split("\n");
+    }
+
     public byte[] toByte(){
         return this.toString().getBytes();
     }
