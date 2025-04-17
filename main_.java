@@ -32,6 +32,26 @@ public class main_ {
     //     }
     // }
 
+    public static void show2emailSideBySide(String[] emailLine1,String[] emailLine2){
+        int maxLength = (emailLine1.length > emailLine2.length) ? emailLine1.length : emailLine2.length;
+        String contentLine1;
+        String contentLine2;
+        for(int lidx = 0; lidx < maxLength;lidx++){
+            if(lidx < emailLine1.length){
+                contentLine1 = emailLine1[lidx];
+            }else{
+                contentLine1 = "";
+            }
+
+            if(lidx < emailLine2.length){
+                contentLine2 = emailLine2[lidx];
+            }else{
+                contentLine2 = "";
+            }
+            System.out.printf("Line %-2d : %-50s | Line %-2d: %-50s\n",lidx,contentLine1,lidx,contentLine2);
+        }
+    }
+
     public static String getHexadecimalString(byte[] bytes,boolean useLimit,int limit){
         String hex = "";
         int counter = 0;
@@ -77,6 +97,7 @@ public class main_ {
         user Sender = null;
         user Reciever = null;
         email draftEmail = new email();
+        email attackedEmail = new email();
 
         ///////////////////////////////////////////////
         // for simulating sending
@@ -397,22 +418,34 @@ public class main_ {
 
             else if(function_mode == FUNCTION.COMPOSE_EMAIL){////////////////////////////////////////////////////////////////////////////////////////////////////////
                 System.out.println("current FUNTION : " + String.valueOf(function_mode));
-                System.out.println("Start compose email by typing each line");
-                System.out.println("type ESC to escape");
-                System.out.println("press ENTER to new line");
+                // System.out.println("Start compose email by typing each line");
+                // System.out.println("type ESC to escape");
+                // System.out.println("press ENTER to new line");
                 line_count = 0;
                 do{
                     System.out.println("type 'ESC' case sensitive to escape\n");
+                    System.out.println("press ENTER to new line\n");
+                    System.out.println("a line can only contain 50 character before automatic new line is used\n");
                     for(int lidx = 0; lidx < line_count;lidx++){
                         System.out.printf("Line %d : %s\n",lidx,draftEmail.content.get(lidx));
                     }
                     System.out.print("Line " + line_count + " : ");
                     content_line = sc.nextLine();
-                    line_count = line_count + 1;
+                    // line_count++;
                     if(content_line.equals("ESC")){
                         break;
                     }
-                    draftEmail.content.add(content_line);
+                    // # make sure the line contains less than 50 character
+                    while(content_line.length() > 50){
+                        draftEmail.content.add(content_line.substring(0, 50));
+                        content_line = content_line.substring(50,content_line.length());
+                        line_count++;
+                    }
+                    if(content_line.length() != 0){
+                        draftEmail.content.add(content_line);
+                        line_count++;
+                    }
+                    
                     clearScreen();
                 }while(!content_line.equals("ESC"));
                 System.out.println(draftEmail.content);
@@ -536,6 +569,7 @@ public class main_ {
                     System.out.println("Attacker decide to change the sender to the attacker's address");
                     System.out.println(byteToString(sentByteMessage));
                     messageLines = byteToString(sentByteMessage).split("\n");
+
                     messageLines[0] = messageLines[0].split(":")[0] + ": " + attacker.EmailAddress;
                     
                     System.out.println("INTO\n");
@@ -544,6 +578,8 @@ public class main_ {
                     }
 
                     sentByteMessage = attackerResendByte(messageLines);
+
+                    show2emailSideBySide(messageLines, messageLines);
 
                     //////////////////// ATTACKING
                     
