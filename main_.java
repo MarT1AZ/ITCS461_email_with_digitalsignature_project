@@ -6,7 +6,13 @@ import java.security.Signature;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 
 
@@ -71,13 +77,29 @@ public class main_ {
         return hex;
     } 
 
-    public static boolean verify(byte[] hash1,byte[] hash2){
+    public static boolean isTheSameHash(byte[] hash1,byte[] hash2){
+        if(hash1.length != hash2.length){
+            return false;
+        }
         for(int bidx = 0;bidx < hash1.length;bidx++){
             if(hash1[bidx] != hash2[bidx]){
                 return false;
             }
         }
         return true;
+    }
+
+    public static String[] changeContent(String[] originalMessage){
+        String senderAddressLine = originalMessage[0];
+        String recieverAddressLine = originalMessage[1];
+        String[] modifiedMessage = new String[5];
+        modifiedMessage[0] = senderAddressLine;
+        modifiedMessage[1] = recieverAddressLine;
+        modifiedMessage[2] = "Congratulation";
+        modifiedMessage[3] = "You just won $99999999 ";
+        modifiedMessage[4] = "follow this link -> http:xxx to claim prize";
+        return modifiedMessage;
+        
     }
 
     public static byte[] attackerResendByte(String[] modifiedMessageLines){
@@ -94,6 +116,21 @@ public class main_ {
             stringMessage = stringMessage + (char) message[bidx];
         }
         return stringMessage;
+    }
+
+    public static byte[] replaceSignature(byte[] messageByte,PrivateKey PK) throws NoSuchAlgorithmException, NoSuchPaddingException,InvalidKeyException,IllegalBlockSizeException,BadPaddingException{
+        try{
+            MessageDigest MD = MessageDigest.getInstance("SHA256");
+            Cipher CipherRSA = Cipher.getInstance("RSA");
+            CipherRSA.init(Cipher.ENCRYPT_MODE, PK);
+            return CipherRSA.doFinal(MD.digest(messageByte));
+
+
+        }catch(Exception e){
+            System.out.println("throwing exception from method : replaceSignature");
+            throw e;
+        }
+        
     }
 
 
@@ -127,7 +164,9 @@ public class main_ {
         ///////////////// Reciever
         
         PublicKey selectedKeyForVerification;
-        
+        String keyOwnerName;
+        boolean isMessageModified = true;
+        boolean unableToDecrypt = false;
         Cipher recieverCipherRSA;
         MessageDigest recieverMD;
         byte[] recievedEncryptedHash;
@@ -145,7 +184,7 @@ public class main_ {
             CHOOSE_METHOD,
             CHANGE_SENDER,
             CHANGE_CONTENT,
-            CHANGE_SIGNATURE,
+            RESIGN_MESSAGE,
             TOTAL_MODIFICATION,
             PASS_MESSAGE
         }
@@ -561,6 +600,9 @@ public class main_ {
                 
                 clearScreen();
                 try{
+                    isMessageModified = true;
+                    unableToDecrypt = false;
+                    selectedKeyForVerification = null;
                     senderMD = MessageDigest.getInstance("SHA256");
                     senderCipherRSA = Cipher.getInstance("RSA");
 
@@ -606,8 +648,8 @@ public class main_ {
 
                     while(selected_method != MODIFY_METHOD.PASS_MESSAGE){
 
-                        System.out.printf("       Original Email\n\n");
-                        show1email(draftEmail.getContentArray());
+                        System.out.printf("       Email Message to modify\n\n");
+                        show1email(byteToString(packetByteMessage).split("\n"));
 
                         System.out.printf("\n       Intercepted Email Byte Stream\n");
                         System.out.printf("\n   %s\n",getHexadecimalString(packetByteMessage, true,20) + " ....");
@@ -645,14 +687,15 @@ public class main_ {
                                 messageLines = byteToString(packetByteMessage).split("\n");
                                 messageLines[0] = messageLines[0].split(":")[0] + ": " + attacker.EmailAddress;
                                 packetByteMessage = attackerResendByte(messageLines);
-                                clearScreen();
                                 break;
 
                             case MODIFY_METHOD.CHANGE_CONTENT:
-                                clearScreen();
+                                messageLines = byteToString(packetByteMessage).split("\n");
+                                messageLines = changeContent(messageLines);
+                                packetByteMessage = attackerResendByte(messageLines);
                                 break;
-                            case MODIFY_METHOD.CHANGE_SIGNATURE:
-                                clearScreen();
+                            case MODIFY_METHOD.RESIGN_MESSAGE:
+                                packetByteEncryptedHash = replaceSignature(packetByteMessage, attacker.getPrivateKey());
                                 break;
                             case MODIFY_METHOD.TOTAL_MODIFICATION:
                                 clearScreen();
@@ -664,6 +707,8 @@ public class main_ {
                                 clearScreen();
                                 break;
                         }
+                        
+                        clearScreen();
                         
                     }
                     
@@ -726,6 +771,9 @@ public class main_ {
 
                     selected_userID = selected_userID - 1;
                     selectedKeyForVerification = users.get(selected_userID).getPublicKey();
+                    keyOwnerName = users.get(selected_userID).name;
+
+                    clearScreen();
 
                     recieverCipherRSA = Cipher.getInstance("RSA");
                     try{
@@ -742,45 +790,45 @@ public class main_ {
                         System.out.println(e.getMessage());
                         System.out.println("Exception from inner Try block=02");
                         System.out.println("The message must have been altered!!");
+                        unableToDecrypt = true;
                         decryptedHashValue = null;
                     }
                     
                     
                     
                     
-                    System.out.printf("\nHash of the recieved email in hexadecimal : %s .....\n",getHexadecimalString(hashValueOfReievedMessage,true,10));
+                    // System.out.printf("\nHash of the recieved email in hexadecimal : %s .....\n",getHexadecimalString(hashValueOfReievedMessage,true,10));
                     
-                    try {
-                        System.out.printf("\nDecrypted recieved hash in hexadecimal using RSA : %s .....\n",getHexadecimalString(decryptedHashValue,true,10));
-                        System.out.printf("\nverfication of authencity of the recieved email %b",verify(decryptedHashValue,
-                                                                                                            hashValueOfReievedMessage));
-                    } catch (Exception e) {
-                        // TODO: handle exception
-                        System.out.println(e.getMessage());
-                        System.out.println("Exception from inner Try block=03");
-                        System.out.println("The message must have been altered!!");
-                    }
+                    isMessageModified = unableToDecrypt ? true : !isTheSameHash(decryptedHashValue,hashValueOfReievedMessage);
 
                     System.out.print("\n\n");
                     // System.out.printf("Line %-2d : %-50s | Line %-2d : %-50s\n");
                     System.out.printf("       Original Email %-47s Recieved Email\n\n","");
                     show2emailSideBySide(byteToString(sentByteMessage).split("\n"), byteToString(receivedByteMessage).split("\n"));
-                    System.out.printf("\n       %-50s             %-50s\n","Sent Email Byte Stream","Recieved Email Byte Stream");
-                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(sentByteMessage, true,20) + " ....",getHexadecimalString(receivedByteMessage, true,20) + " ....");
-                    System.out.printf("\n       %-50s             %-50s\n","Sent Hash","Hash of the recieved Email Byte Stream");
-                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(hashValue, true,20) + " ....",getHexadecimalString(hashValueOfReievedMessage, true,20) + " ....");
-                    System.out.printf("\n       %-50s             %-50s\n","Sent Encrypted Hash","Recieved Encrypted Hash");
-                    System.out.printf("\n   %-50s             %-50s\n",getHexadecimalString(sentEncryptedHash, true,20) + " ....",getHexadecimalString(recievedEncryptedHash, true,20) + " ....");
+                    System.out.printf("\n       %-50s    |        %-50s\n","Sent Email Byte Stream","Recieved Email Byte Stream");
+                    System.out.printf("\n   %-50s        |    %-50s\n",getHexadecimalString(sentByteMessage, true,20) + " ....",getHexadecimalString(receivedByteMessage, true,20) + " ....");
+                    System.out.printf("\n       %-50s    |        %-50s\n","Sent Hash","Hash of the recieved Email Byte Stream");
+                    System.out.printf("\n   %-50s        |    %-50s\n",getHexadecimalString(hashValue, true,20) + " ....",getHexadecimalString(hashValueOfReievedMessage, true,20) + " ....");
+                    System.out.printf("\n       %-50s    |        %-50s\n","Sent Encrypted Hash","Recieved Encrypted Hash");
+                    System.out.printf("\n   %-50s        |    %-50s\n",getHexadecimalString(sentEncryptedHash, true,20) + " ....",getHexadecimalString(recievedEncryptedHash, true,20) + " ....");
                     
+                    System.out.print("\n-== VERIFICATION PROCESS ==---------------------------------------------------------------------------------\n");
+
+                    System.out.printf("\n       %-50s    |\n","Public key used , Owner : " + keyOwnerName);
+                    System.out.printf("\n   %-50s\n",getHexadecimalString(selectedKeyForVerification.getEncoded(), true,20) + " ....");
+                    System.out.printf("\n       %-50s    |        %-50s\n","Hash of the recieved Email Byte Stream","Decrypted of recieved encrypted Hash");
+                    System.out.printf("\n   %-50s        |    %-50s\n",getHexadecimalString(hashValueOfReievedMessage, true,20) + " ....",unableToDecrypt ? "UNABLE TO DECRYPT" :  getHexadecimalString(decryptedHashValue , true,20) + " ....");
+                    System.out.printf("\n       VERIFICATION STATUS : %s\n",isMessageModified ? "MODIFIED" : "UN-MODIFIED");
+
 
                 }catch(Exception e){
                     System.out.println(e.getMessage());
-                    System.out.println("Exception from outer Try block");
+                    System.out.println("Exception from outer {verification} Try block");
                 } 
 
 
                 System.out.print("\n");
-                System.out.println("Press any keys to return ");
+                System.out.print("Press any keys to return ");
                 sc.nextLine();
                 function_mode = FUNCTION.SELECT_FUNCTION;
                 clearScreen();
